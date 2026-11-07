@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- ================= TEXT ================= -->
+    <dimen name="header_size">20sp</dimen>
+    <dimen name="title_size">16sp</dimen>
+    <dimen name="number_size">18sp</dimen>
+    <dimen name="unit_size">12sp</dimen>
+    <dimen name="unit_sub_size">10sp</dimen>
+    <dimen name="button_text_size">16sp</dimen>
+
+    <!-- padding size -->
+    <dimen name="padding_xsmall">4dp</dimen>
+    <dimen name="padding_small">10dp</dimen>
+    <dimen name="padding_medium">14dp</dimen>
+    <dimen name="padding_large">24dp</dimen>
+    <dimen name="padding_xlarge">30dp</dimen>
+
+    <!-- ================= MARGINS ================= -->
+    <dimen name="margin_xsmall">2dp</dimen>
+    <dimen name="margin_small">4dp</dimen>
+    <dimen name="margin_medium">8dp</dimen>
+    <dimen name="margin_large">12dp</dimen>
+    <dimen name="margin_xlarge">20dp</dimen>
+
+    <!-- ================= CornerRadius ================= -->
+    <dimen name="cardCornerRadius">16dp</dimen>
+
+
+    <!-- ================= layout ================= -->
+    <dimen name="layout_width">0dp</dimen>
+    <dimen name="layout_height">0dp</dimen>
+    <dimen name="layout_height_one">1dp</dimen>
+    <dimen name="linear_layout_width">90dp</dimen>
+
+
+    <!-- ================= iconSize ================= -->
+    <dimen name="icon_size">48dp</dimen>
+
+    <!-- ================= btnSize ================= -->
+    <dimen name="btn_height">52dp</dimen>
+    <!-- ================= btnSize ================= -->
+    <dimen name="textview_layoutWidth">90dp</dimen>
+    <dimen name="textview_layoutHeight">150dp</dimen>
+    <dimen name="textview_Width">40dp</dimen>
+</resources>

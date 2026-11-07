@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="16dp"
+    android:layout_marginBottom="12dp"
+    app:cardCornerRadius="24dp"
+    app:cardElevation="0dp"
+    app:cardBackgroundColor="@color/lightWhite">
+
+    <!-- คอนเทนเนอร์แนวนอน: เนื้อหาข้อมูล (ซ้าย) + ลูกศรชี้ขวา (ขวา) -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="@dimen/padding_medium">
+
+        <!-- ฝั่งซ้าย: รวมข้อมูลทั้งหมด (ขยายพื้นที่เต็มด้วย weight=1) -->
+        <LinearLayout
+            android:layout_width="@dimen/layout_width"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <!-- แถวที่ 1: วันที่/เวลา + ป้ายแท็ก -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="@dimen/margin_medium">
+
+                <TextView
+                    android:id="@+id/tvHistoryDateTime"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/blue"
+                    android:textSize="@dimen/number_size"
+                    android:textStyle="bold"
+                    tools:text="28 ต.ค. 18:37" />
+
+                <!-- ป้ายแท็กสีส้ม: บันทึกก้าวเดิน -->
+                <TextView
+                    android:id="@+id/tagWalk"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:background="@drawable/bg_tag_yellow"
+                    android:paddingHorizontal="@dimen/padding_small"
+                    android:paddingVertical="@dimen/padding_xsmall"
+                    android:text="@string/history_step"
+                    android:textColor="@color/white"
+                    android:textSize="@dimen/unit_size"
+                    android:textStyle="bold"
+                    android:visibility="gone"
+                    tools:visibility="visible"/>
+
+                <!-- ป้ายแท็กสีส้ม: บันทึกการเขย่า -->
+                <TextView
+                    android:id="@+id/tagShake"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/margin_small"
+                    android:background="@drawable/bg_tag_yellow"
+                    android:paddingHorizontal="@dimen/padding_small"
+                    android:paddingVertical="@dimen/padding_xsmall"
+                    android:text="@string/history_shake"
+                    android:textColor="@color/white"
+                    android:textSize="@dimen/unit_size"
+                    android:textStyle="bold"
+                    android:visibility="gone"
+                    tools:visibility="visible" />
+            </LinearLayout>
+
+            <!-- ระยะเวลา -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="@dimen/margin_small">
+
+                <TextView
+                    android:layout_width="@dimen/linear_layout_width"
+                    android:layout_height="wrap_content"
+                    android:text="@string/time"
+                    android:textColor="@color/blue"
+                    android:textSize="@dimen/unit_size"
+                    android:textStyle="bold" />
+
+                <!-- ตัวเลขระยะเวลา -->
+                <TextView
+                    android:id="@+id/tvHistoryDuration"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/yellow"
+                    android:textSize="@dimen/title_size"
+                    android:textStyle="bold"
+                    tools:text="08.37" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/margin_small"
+                    android:text="@string/minute"
+                    android:textColor="@color/blue"
+                    android:textSize="@dimen/unit_size" />
+            </LinearLayout>
+
+            <!-- จำนวนก้าวทั้งหมด  -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="@dimen/margin_small">
+
+                <TextView
+                    android:layout_width="@dimen/textview_layoutWidth"
+                    android:layout_height="wrap_content"
+                    android:text="@string/steps"
+                    android:textColor="@color/blue"
+                    android:textSize="@dimen/unit_size"
+                    android:textStyle="bold" />
+
+                <!-- คอลัมน์ที่ 1: จำนวนก้าวรวม -->
+                <LinearLayout
+                    android:layout_width="@dimen/linear_layout_width"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:id="@+id/tvHistoryTotalSteps"
+                        android:layout_width="@dimen/textview_Width"
+                        android:layout_height="wrap_content"
+                        android:gravity="end"
+                        android:textColor="@color/yellow"
+                        android:textSize="@dimen/title_size"
+                        android:textStyle="bold"
+                        tools:text="93" />
+
+                    <TextView
+                        android:layout_width="@dimen/textview_Width"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/margin_small"
+                        android:text="@string/step"
+                        android:textColor="@color/blue"
+                        android:textSize="@dimen/unit_size" />
+                </LinearLayout>
+
+                <!-- อัตราก้าวต่อนาที -->
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:id="@+id/historyStepRate"
+                        android:layout_width="@dimen/textview_Width"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/yellow"
+                        android:gravity="end"
+                        android:textSize="@dimen/title_size"
+                        android:textStyle="bold"
+                        tools:text="23" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/margin_small"
+                        android:text="@string/stepPerMinute"
+                        android:textColor="@color/blue"
+                        android:textSize="@dimen/unit_size" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- จำนวนการเขย่าทั้งหมด  -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:layout_width="@dimen/textview_layoutWidth"
+                    android:layout_height="wrap_content"
+                    android:text="@string/shakes"
+                    android:textColor="@color/blue"
+                    android:textSize="@dimen/unit_size"
+                    android:textStyle="bold" />
+
+                <!-- จำนวนครั้งเขย่ารวม -->
+                <LinearLayout
+                    android:layout_width="@dimen/textview_layoutWidth"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:id="@+id/tvHistoryTotalShakes"
+                        android:layout_width="@dimen/textview_Width"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/yellow"
+                        android:textSize="@dimen/title_size"
+                        android:textStyle="bold"
+                        android:gravity="end"
+                        tools:text="23" />
+
+                    <TextView
+                        android:layout_width="@dimen/textview_Width"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/margin_small"
+                        android:text="@string/times"
+                        android:textColor="@color/blue"
+                        android:textSize="@dimen/unit_size" />
+                </LinearLayout>
+
+                <!-- คอลัมน์ที่ 2: อัตราเขย่าต่อนาที -->
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:id="@+id/tvHistoryShakeRate"
+                        android:layout_width="@dimen/textview_Width"
+                        android:layout_height="wrap_content"
+                        android:gravity="end"
+                        android:textColor="@color/yellow"
+                        android:textSize="@dimen/title_size"
+                        android:textStyle="bold"
+                        tools:text="5" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/margin_small"
+                        android:text="@string/timePerMinute"
+                        android:textColor="@color/blue"
+                        android:textSize="@dimen/unit_size" />
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+</androidx.cardview.widget.CardView>

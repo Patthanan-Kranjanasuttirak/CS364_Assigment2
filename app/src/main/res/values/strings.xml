@@ -1,3 +1,20 @@
 <resources>
     <string name="app_name">CS364_Assigment2</string>
+    <string name="walk">ก้าวเดิน</string>
+    <string name="step">ก้าว</string>
+    <string name="shake">การเขย่า</string>
+    <string name="times">ครั้ง</string>
+    <string name="save">บันทึกกิจกรรม</string>
+    <string name="history">ประวัติกิจกรรม</string>
+    <string name="step_by_step">STEP BY STEP</string>
+    <string name="overviews">ภาพรวม</string>
+    <string name="time">ระยะเวลา</string>
+    <string name="minute">นาที</string>
+    <string name="shakes">จำนวนการเขย่า</string>
+    <string name="total">ยอดสะสม</string>
+    <string name="steps">จำนวนก้าว</string>
+    <string name="history_shake">บันทึกการเขย่า</string>
+    <string name="history_step">บันทึกก้าวเดิน</string>
+    <string name="stepPerMinute">ก้าว/นาที</string>
+    <string name="timePerMinute">ครั้ง/นาที</string>
 </resources>
