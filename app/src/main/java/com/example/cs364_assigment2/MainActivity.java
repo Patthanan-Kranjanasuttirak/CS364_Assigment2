@@ -1,5 +1,7 @@
-package com.example.stepbystep; // ชื่อแพ็กเกจของคุณ
-
+package com.example.cs364_assigment2;
+import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
+import androidx.core.content.ContextCompat;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -7,6 +9,8 @@ import android.graphics.RectF;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.TextView;
+import java.util.Locale;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.ItemTouchHelper;
@@ -18,12 +22,23 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView rvHistory;
     private HistoryAdapter historyAdapter;
 
+    // ===== [คนที่ 3] Shake Counter =====
+    private ShakeDetector shakeDetector;
+    private TextView liveShake, summaryShakeValue;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         // 1. ผูก View และตั้งค่า Adapter ตามปกติก่อน
+        // ===== [คนที่ 3] Shake Counter: ผูก View + ตั้ง listener =====
+        liveShake = findViewById(R.id.liveShake);
+        summaryShakeValue = findViewById(R.id.summaryShakeValue);
+        shakeDetector = new ShakeDetector(this);
+        shakeDetector.setOnShakeListener(total -> updateShakeUI(total));
+        updateShakeUI(0);
+
         rvHistory = findViewById(R.id.rvHistory);
         rvHistory.setLayoutManager(new LinearLayoutManager(this));
 
@@ -113,5 +128,35 @@ public class MainActivity extends AppCompatActivity {
 
         ItemTouchHelper itemTouchHelper = new ItemTouchHelper(swipeCallback);
         itemTouchHelper.attachToRecyclerView(rvHistory);
+    }
+
+    // ===== [คนที่ 3] Shake Counter =====
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (shakeDetector != null && shakeDetector.isAvailable()) shakeDetector.start();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (shakeDetector != null) shakeDetector.stop();
+    }
+
+    private void updateShakeUI(int total) {
+        liveShake.setText(String.valueOf(total));
+        summaryShakeValue.setText(String.valueOf(total));
+    }
+
+    /** ให้ส่วนบันทึกกิจกรรม (SQLite) เรียกใช้ตอนกดปุ่ม "บันทึกกิจกรรม" */
+    public int getSessionShakes() { return shakeDetector.getShakeCount(); }
+
+    /** shakes/min ของ session ปัจจุบัน สำหรับแสดงในประวัติกิจกรรม */
+    public float getSessionShakesPerMinute() { return shakeDetector.getShakesPerMinute(); }
+
+    /** เรียกหลังบันทึกกิจกรรมเสร็จ เพื่อเริ่มนับ session ใหม่ */
+    public void resetShakeSession() {
+        shakeDetector.reset();
+        updateShakeUI(0);
     }
 }
