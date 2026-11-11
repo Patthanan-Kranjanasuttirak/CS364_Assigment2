@@ -1,162 +1,350 @@
 package com.example.cs364_assigment2;
-import android.graphics.Bitmap;
-import android.graphics.drawable.Drawable;
-import androidx.core.content.ContextCompat;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
-import android.graphics.RectF;
-import android.graphics.Typeface;
+
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
+
 import android.os.Bundle;
-import android.view.View;
+import android.os.SystemClock;
+import android.widget.Button;
 import android.widget.TextView;
-import java.util.Locale;
-import androidx.annotation.NonNull;
+
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-public class MainActivity extends AppCompatActivity {
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
 
+public class MainActivity extends AppCompatActivity
+        implements SensorEventListener {
+
+    // ===== Step Counter =====
+    private SensorManager sensorManager;
+    private Sensor accelerometer;
+    private StepCounter stepCounter;
+
+    // แสดงจำนวนก้าว
+    private TextView stepTextView;
+    private TextView summaryStepValue;
+
+    // ===== Shake Counter =====
+    private ShakeDetector shakeDetector;
+    private TextView liveShake;
+    private TextView summaryShakeValue;
+
+    // ===== Activity History =====
     private RecyclerView rvHistory;
     private HistoryAdapter historyAdapter;
+    private List<HistoryItem> historyList;
 
-    // ===== [คนที่ 3] Shake Counter =====
-    private ShakeDetector shakeDetector;
-    private TextView liveShake, summaryShakeValue;
+    // ===== Activity Session =====
+    private int currentSteps = 0;
+    private long sessionStartTime;
+    private Button btnSaveActivity;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
 
-        // 1. ผูก View และตั้งค่า Adapter ตามปกติก่อน
-        // ===== [คนที่ 3] Shake Counter: ผูก View + ตั้ง listener =====
+        setContentView(R.layout.activity_main);
+        sessionStartTime = SystemClock.elapsedRealtime();
+
+        stepTextView = findViewById(R.id.liveSteps);
+        summaryStepValue = findViewById(R.id.summaryStepValue);
+        btnSaveActivity = findViewById(R.id.btnSaveActivity);
+
+        // ==========================================
+        // STEP COUNTER
+        // ==========================================
+
+        // สร้าง StepCounter
+        stepCounter = new StepCounter();
+
+        // เรียก SensorManager
+        sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+
+        // เรียก Accelerometer
+        accelerometer = sensorManager.getDefaultSensor(
+                Sensor.TYPE_ACCELEROMETER
+        );
+
+        // ==========================================
+        // SHAKE COUNTER
+        // ==========================================
+
         liveShake = findViewById(R.id.liveShake);
         summaryShakeValue = findViewById(R.id.summaryShakeValue);
+
         shakeDetector = new ShakeDetector(this);
-        shakeDetector.setOnShakeListener(total -> updateShakeUI(total));
+
+        shakeDetector.setOnShakeListener(total -> {
+            updateShakeUI(total);
+        });
+
         updateShakeUI(0);
 
+        // ==========================================
+        // ACTIVITY HISTORY
+        // ==========================================
+
         rvHistory = findViewById(R.id.rvHistory);
-        rvHistory.setLayoutManager(new LinearLayoutManager(this));
 
-        // สมมติว่ามี historyList และ new HistoryAdapter(...) แล้ว
-        historyAdapter = new HistoryAdapter(this, historyList);
+        historyList = new ArrayList<>();
+
+        historyAdapter = new HistoryAdapter(historyList);
+
+        rvHistory.setLayoutManager(
+                new LinearLayoutManager(this)
+        );
+
         rvHistory.setAdapter(historyAdapter);
-
-        // 2. swipeCallback
-        ItemTouchHelper.SimpleCallback swipeCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
-            private final Paint paint = new Paint();
-            private final Paint textPaint = new Paint();
-            private Bitmap deleteIcon;
-
-            {
-                // กำหนดสีพื้นหลังแดง
-                paint.setColor(Color.parseColor("#B83B3B"));
-
-                // กำหนดรูปแบบตัวหนังสือ "ลบ"
-                textPaint.setColor(Color.WHITE);
-                textPaint.setTextSize(40f);
-                textPaint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
-                textPaint.setTextAlign(Paint.Align.CENTER);
-
-                // ดึงไอคอนมาเตรียมไว้และย่อขนาดให้พอดี (ขนาด 24dp ~ 64px)
-                Drawable iconDrawable = ContextCompat.getDrawable(MainActivity.this, R.drawable.delete); // เปลี่ยนเป็น R.drawable.trash หรือ ic_delete
-                if (iconDrawable != null) {
-                    deleteIcon = Bitmap.createBitmap(64, 64, Bitmap.Config.ARGB_8888);
-                    Canvas canvas = new Canvas(deleteIcon);
-                    iconDrawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
-                    // ย้อมสีไอคอนเป็นสีขาว
-                    iconDrawable.setTint(Color.WHITE);
-                    iconDrawable.draw(canvas);
-                }
-            }
-
-            @Override
-            public boolean onMove(@NonNull RecyclerView recyclerView,
-                                  @NonNull RecyclerView.ViewHolder viewHolder,
-                                  @NonNull RecyclerView.ViewHolder target) {
-                return false;
-            }
-
-            @Override
-            public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
-                int position = viewHolder.getAdapterPosition();
-                historyAdapter.removeItem(position);
-            }
-
-            @Override
-            public void onChildDraw(@NonNull Canvas c, @NonNull RecyclerView recyclerView,
-                                    @NonNull RecyclerView.ViewHolder viewHolder, float dX, float dY,
-                                    int actionState, boolean isCurrentlyActive) {
-
-                View itemView = viewHolder.itemView;
-
-                if (dX < 0) { // กำลังปัดไปทางซ้าย
-                    // 1. วาดแถบพื้นหลังสีแดงขอบมน
-                    RectF background = new RectF(
-                            (float) itemView.getRight() + dX,
-                            (float) itemView.getTop(),
-                            (float) itemView.getRight(),
-                            (float) itemView.getBottom()
-                    );
-                    c.drawRoundRect(background, 24f, 24f, paint);
-
-                    // คำนวณจุดกึ่งกลางแกน X ของปุ่มลบ (อยู่ห่างจากขอบขวาเข้ามา 70px)
-                    float centerX = itemView.getRight() - 90f;
-                    float centerY = itemView.getTop() + ((float) itemView.getHeight() / 2);
-
-                    // แสดงเมื่อเริ่มปัดกว้างพอ
-                    if (Math.abs(dX) > 80) {
-                        // 2. วาดคำว่า "ลบ" ด้านบน (ขยับขึ้นจากกึ่งกลางเล็กน้อย)
-                        c.drawText("ลบ", centerX, centerY - 15f, textPaint);
-
-                        // 3. วาดไอคอนถังขยะใต้คำว่า "ลบ"
-                        if (deleteIcon != null) {
-                            float iconLeft = centerX - ((float) deleteIcon.getWidth() / 2);
-                            float iconTop = centerY + 10f; // วางห่างจากจุดกึ่งกลางลงมาข้างล่าง
-                            c.drawBitmap(deleteIcon, iconLeft, iconTop, null);
-                        }
-                    }
-                }
-
-                super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
-            }
-        };
-
-        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(swipeCallback);
-        itemTouchHelper.attachToRecyclerView(rvHistory);
+        btnSaveActivity.setOnClickListener(v -> saveActivity());
     }
 
-    // ===== [คนที่ 3] Shake Counter =====
+
+    // ==========================================
+    // เมื่อ Activity กลับมาแสดง
+    // ==========================================
+
     @Override
     protected void onResume() {
         super.onResume();
-        if (shakeDetector != null && shakeDetector.isAvailable()) shakeDetector.start();
+
+        // เริ่ม Shake Detector
+        if (shakeDetector != null && shakeDetector.isAvailable()) {
+            shakeDetector.start();
+        }
+
+        // เริ่ม Accelerometer
+        if (accelerometer != null) {
+            sensorManager.registerListener(
+                    this,
+                    accelerometer,
+                    SensorManager.SENSOR_DELAY_GAME
+            );
+        }
     }
+
+
+    // ==========================================
+    // เมื่อ Activity ถูกพัก
+    // ==========================================
 
     @Override
     protected void onPause() {
         super.onPause();
-        if (shakeDetector != null) shakeDetector.stop();
+
+        // หยุด Shake Detector
+        if (shakeDetector != null) {
+            shakeDetector.stop();
+        }
+
+        // หยุด Accelerometer
+        if (sensorManager != null) {
+            sensorManager.unregisterListener(this);
+        }
     }
+
+
+    // ==========================================
+    // รับข้อมูลจาก Accelerometer
+    // ==========================================
+
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+
+        // ตรวจว่าเป็น Accelerometer หรือไม่
+        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+
+            // ค่าแกน X Y Z
+            float x = event.values[0];
+            float y = event.values[1];
+            float z = event.values[2];
+
+            // timestamp
+            long timestamp = event.timestamp / 1_000_000L;
+
+            // ส่งข้อมูลให้ StepCounter
+            int steps = stepCounter.processAcceleration(
+                    x,
+                    y,
+                    z,
+                    timestamp
+            );
+
+            currentSteps = steps;
+
+            // แสดงจำนวนก้าวใน Log
+            System.out.println("Steps: " + steps);
+
+            // ถ้ามี TextView สำหรับแสดงก้าว
+            if (stepTextView != null) {
+                stepTextView.setText(String.valueOf(steps));
+            }
+            if (summaryStepValue != null) {
+                summaryStepValue.setText(String.valueOf(steps));
+            }
+        }
+    }
+
+
+    // ==========================================
+    // Sensor Accuracy
+    // ==========================================
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+        // ไม่ต้องทำอะไร
+    }
+
+    private void saveActivity() {
+
+        // ==========================
+        // คำนวณเวลา
+        // ==========================
+
+        long elapsedMillis =
+                SystemClock.elapsedRealtime() - sessionStartTime;
+
+        float durationMinutes =
+                elapsedMillis / 60000f;
+
+        if (durationMinutes < 0.01f) {
+            durationMinutes = 0.01f;
+        }
+
+        // ==========================
+        // ข้อมูล Steps
+        // ==========================
+
+        int totalSteps = currentSteps;
+
+        float stepRate =
+                totalSteps / durationMinutes;
+
+        // ==========================
+        // ข้อมูล Shake
+        // ==========================
+
+        int totalShakes =
+                getSessionShakes();
+
+        float shakeRate =
+                getSessionShakesPerMinute();
+
+        // ==========================
+        // วันที่ / เวลา
+        // ==========================
+
+        String dateTime =
+                new SimpleDateFormat(
+                        "dd MMM HH:mm",
+                        Locale.getDefault()
+                ).format(new Date());
+
+        // ==========================
+        // แสดงระยะเวลา
+        // ==========================
+
+        String durationText =
+                String.format(
+                        Locale.getDefault(),
+                        "%.2f",
+                        durationMinutes
+                );
+
+        // ==========================
+        // สร้าง History
+        // ==========================
+
+        HistoryItem item = new HistoryItem(
+                dateTime,
+                durationText,
+                totalSteps,
+                stepRate,
+                totalShakes,
+                shakeRate,
+                totalSteps > 0,
+                totalShakes > 0
+        );
+
+        // เพิ่มรายการใหม่ไว้ด้านบน
+        historyList.add(0, item);
+
+        historyAdapter.notifyItemInserted(0);
+
+        rvHistory.scrollToPosition(0);
+
+        // ==========================
+        // Reset session
+        // ==========================
+
+        currentSteps = 0;
+
+        stepCounter = new StepCounter();
+
+        resetShakeSession();
+
+        sessionStartTime =
+                SystemClock.elapsedRealtime();
+
+        // Reset หน้าจอ
+        if (stepTextView != null) {
+            stepTextView.setText("0");
+        }
+    }
+
+    // ==========================================
+    // SHAKE UI
+    // ==========================================
 
     private void updateShakeUI(int total) {
-        liveShake.setText(String.valueOf(total));
-        summaryShakeValue.setText(String.valueOf(total));
+
+        if (liveShake != null) {
+            liveShake.setText(String.valueOf(total));
+        }
+
+        if (summaryShakeValue != null) {
+            summaryShakeValue.setText(String.valueOf(total));
+        }
     }
 
-    /** ให้ส่วนบันทึกกิจกรรม (SQLite) เรียกใช้ตอนกดปุ่ม "บันทึกกิจกรรม" */
-    public int getSessionShakes() { return shakeDetector.getShakeCount(); }
 
-    /** shakes/min ของ session ปัจจุบัน สำหรับแสดงในประวัติกิจกรรม */
-    public float getSessionShakesPerMinute() { return shakeDetector.getShakesPerMinute(); }
+    // ==========================================
+    // สำหรับใช้ตอนบันทึก Activity
+    // ==========================================
 
-    /** เรียกหลังบันทึกกิจกรรมเสร็จ เพื่อเริ่มนับ session ใหม่ */
+    public int getSessionShakes() {
+
+        if (shakeDetector == null) {
+            return 0;
+        }
+
+        return shakeDetector.getShakeCount();
+    }
+
+
+    public float getSessionShakesPerMinute() {
+
+        if (shakeDetector == null) {
+            return 0;
+        }
+
+        return shakeDetector.getShakesPerMinute();
+    }
+
+
     public void resetShakeSession() {
-        shakeDetector.reset();
+
+        if (shakeDetector != null) {
+            shakeDetector.reset();
+        }
+
         updateShakeUI(0);
     }
 }
