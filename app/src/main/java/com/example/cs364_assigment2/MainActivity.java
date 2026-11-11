@@ -1,5 +1,18 @@
 package com.example.cs364_assigment2;
 
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.RectF;
+import android.graphics.Typeface;
+import android.graphics.drawable.Drawable;
+import android.graphics.Bitmap;
+import android.view.View;
+
+import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
+import androidx.recyclerview.widget.ItemTouchHelper;
+
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -104,6 +117,7 @@ public class MainActivity extends AppCompatActivity
 
         rvHistory.setAdapter(historyAdapter);
         btnSaveActivity.setOnClickListener(v -> saveActivity());
+        setupSwipeToDelete();
     }
 
 
@@ -200,6 +214,164 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
         // ไม่ต้องทำอะไร
+    }
+
+    private void setupSwipeToDelete() {
+
+        ItemTouchHelper.SimpleCallback swipeCallback =
+                new ItemTouchHelper.SimpleCallback(
+                        0,
+                        ItemTouchHelper.LEFT) {
+
+                    private final Paint backgroundPaint = new Paint();
+                    private final Paint textPaint = new Paint();
+                    private Bitmap deleteIcon;
+
+                    {
+                        backgroundPaint.setColor(
+                                Color.parseColor("#B83B3B")
+                        );
+
+                        textPaint.setColor(Color.WHITE);
+                        textPaint.setTextSize(40f);
+                        textPaint.setTypeface(
+                                Typeface.create(
+                                        Typeface.DEFAULT,
+                                        Typeface.BOLD
+                                )
+                        );
+                        textPaint.setTextAlign(Paint.Align.CENTER);
+
+                        Drawable iconDrawable =
+                                ContextCompat.getDrawable(
+                                        MainActivity.this,
+                                        R.drawable.delete
+                                );
+
+                        if (iconDrawable != null) {
+
+                            deleteIcon = Bitmap.createBitmap(
+                                    64,
+                                    64,
+                                    Bitmap.Config.ARGB_8888
+                            );
+
+                            Canvas canvas =
+                                    new Canvas(deleteIcon);
+
+                            iconDrawable.setBounds(
+                                    0,
+                                    0,
+                                    64,
+                                    64
+                            );
+
+                            iconDrawable.setTint(Color.WHITE);
+                            iconDrawable.draw(canvas);
+                        }
+                    }
+
+                    @Override
+                    public boolean onMove(
+                            @NonNull RecyclerView recyclerView,
+                            @NonNull RecyclerView.ViewHolder viewHolder,
+                            @NonNull RecyclerView.ViewHolder target) {
+
+                        return false;
+                    }
+
+                    @Override
+                    public void onSwiped(
+                            @NonNull RecyclerView.ViewHolder viewHolder,
+                            int direction) {
+
+                        int position =
+                                viewHolder.getBindingAdapterPosition();
+
+                        if (position != RecyclerView.NO_POSITION) {
+                            historyAdapter.removeItem(position);
+                        }
+                    }
+
+                    @Override
+                    public void onChildDraw(
+                            @NonNull Canvas c,
+                            @NonNull RecyclerView recyclerView,
+                            @NonNull RecyclerView.ViewHolder viewHolder,
+                            float dX,
+                            float dY,
+                            int actionState,
+                            boolean isCurrentlyActive) {
+
+                        View itemView = viewHolder.itemView;
+
+                        if (dX < 0) {
+
+                            RectF background = new RectF(
+                                    itemView.getRight() + dX,
+                                    itemView.getTop(),
+                                    itemView.getRight(),
+                                    itemView.getBottom()
+                            );
+
+                            c.drawRoundRect(
+                                    background,
+                                    24f,
+                                    24f,
+                                    backgroundPaint
+                            );
+
+                            float centerX =
+                                    itemView.getRight() - 90f;
+
+                            float centerY =
+                                    itemView.getTop()
+                                            + itemView.getHeight() / 2f;
+
+                            if (Math.abs(dX) > 80) {
+
+                                c.drawText(
+                                        "ลบ",
+                                        centerX,
+                                        centerY - 15f,
+                                        textPaint
+                                );
+
+                                if (deleteIcon != null) {
+
+                                    float iconLeft =
+                                            centerX
+                                                    - deleteIcon.getWidth() / 2f;
+
+                                    float iconTop =
+                                            centerY + 10f;
+
+                                    c.drawBitmap(
+                                            deleteIcon,
+                                            iconLeft,
+                                            iconTop,
+                                            null
+                                    );
+                                }
+                            }
+                        }
+
+                        super.onChildDraw(
+                                c,
+                                recyclerView,
+                                viewHolder,
+                                dX,
+                                dY,
+                                actionState,
+                                isCurrentlyActive
+                        );
+                    }
+                };
+
+        ItemTouchHelper itemTouchHelper =
+                new ItemTouchHelper(swipeCallback);
+
+        itemTouchHelper.attachToRecyclerView(rvHistory);
     }
 
     private void saveActivity() {

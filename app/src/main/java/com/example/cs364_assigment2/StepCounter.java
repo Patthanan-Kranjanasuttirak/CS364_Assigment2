@@ -26,10 +26,14 @@ public class StepCounter {
                 x * x + y * y + z * z
         );
 
+        // ตัดผลของแรงโน้มถ่วงออก
+        float linearMagnitude =
+                Math.abs(magnitude - 9.81f);
+
         // ตรวจสอบว่าค่าก่อนหน้าเป็นจุดสูงสุดหรือไม่
         boolean isPeak =
                 previousMagnitude > previousPreviousMagnitude
-                        && previousMagnitude > magnitude
+                        && previousMagnitude > linearMagnitude
                         && previousMagnitude > THRESHOLD;
 
         // ถ้าเป็น peak และห่างจากก้าวก่อนหน้าอย่างน้อย 300 ms
@@ -42,7 +46,7 @@ public class StepCounter {
 
         // เก็บค่าก่อนหน้าไว้ใช้ตรวจสอบรอบต่อไป
         previousPreviousMagnitude = previousMagnitude;
-        previousMagnitude = magnitude;
+        previousMagnitude = linearMagnitude;
 
         return steps;
     }
