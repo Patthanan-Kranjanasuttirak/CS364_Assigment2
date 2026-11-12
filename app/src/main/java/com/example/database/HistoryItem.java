@@ -1,6 +1,7 @@
-package com.example.cs364_assigment2;
+package com.example.database;
 
 public class HistoryItem {
+    private long id;
 
     private String dateTime;
     private String duration;
@@ -24,6 +25,21 @@ public class HistoryItem {
             boolean isWalk,
             boolean isShake
     ) {
+        this(-1, dateTime, duration, totalSteps, stepRate,
+                totalShakes, shakeRate, isWalk, isShake);
+    }
+    public HistoryItem(
+            long id,
+            String dateTime,
+            String duration,
+            int totalSteps,
+            float stepRate,
+            int totalShakes,
+            float shakeRate,
+            boolean isWalk,
+            boolean isShake
+    ) {
+        this.id = id;
         this.dateTime = dateTime;
         this.duration = duration;
         this.totalSteps = totalSteps;
@@ -32,6 +48,10 @@ public class HistoryItem {
         this.shakeRate = shakeRate;
         this.isWalk = isWalk;
         this.isShake = isShake;
+    }
+
+    public long getId() {
+        return id;
     }
 
     public String getDateTime() {

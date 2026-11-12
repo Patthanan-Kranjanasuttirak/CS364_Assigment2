@@ -1,4 +1,4 @@
-package com.example.cs364_assigment2;
+package com.example.database;
 
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -33,8 +33,16 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
+
+import com.example.database.database.DatabaseHelper;
+
 public class MainActivity extends AppCompatActivity
+
         implements SensorEventListener {
+    private DatabaseHelper databaseHelper;
 
     // ===== Step Counter =====
     private SensorManager sensorManager;
@@ -59,12 +67,42 @@ public class MainActivity extends AppCompatActivity
     private int currentSteps = 0;
     private long sessionStartTime;
     private Button btnSaveActivity;
+    private void loadHistory() {
+        historyList.clear();
+
+        historyList.addAll(databaseHelper.getAllActivities());
+
+        historyAdapter.notifyDataSetChanged();
+
+        Log.d("DATABASE_TEST",
+                "Loaded activities: " + historyList.size());
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_main);
+        // Initialize SQLite Database
+        databaseHelper = new DatabaseHelper(this);
+
+        SQLiteDatabase db = databaseHelper.getWritableDatabase();
+
+        Log.d("DATABASE_TEST", "Database created successfully!");
+
+// Check whether activities table exists
+        Cursor cursor = db.rawQuery(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name=?",
+                new String[]{DatabaseHelper.TABLE_ACTIVITIES}
+        );
+
+        if (cursor.moveToFirst()) {
+            Log.d("DATABASE_TEST", "activities table exists!");
+        } else {
+            Log.e("DATABASE_TEST", "activities table not found!");
+        }
+
+        cursor.close();
         sessionStartTime = SystemClock.elapsedRealtime();
 
         stepTextView = findViewById(R.id.liveSteps);
@@ -116,6 +154,10 @@ public class MainActivity extends AppCompatActivity
         );
 
         rvHistory.setAdapter(historyAdapter);
+
+// โหลดประวัติจาก SQLite
+        loadHistory();
+
         btnSaveActivity.setOnClickListener(v -> saveActivity());
         setupSwipeToDelete();
     }
@@ -289,7 +331,30 @@ public class MainActivity extends AppCompatActivity
                                 viewHolder.getBindingAdapterPosition();
 
                         if (position != RecyclerView.NO_POSITION) {
-                            historyAdapter.removeItem(position);
+
+                            // ดึงรายการที่ต้องการลบ
+                            HistoryItem item = historyList.get(position);
+
+                            // ลบข้อมูลจาก SQLite ด้วย ID
+                            int deletedRows =
+                                    databaseHelper.deleteActivity(item.getId());
+
+                            if (deletedRows > 0) {
+
+                                // ลบออกจากหน้าจอเมื่อฐานข้อมูลลบสำเร็จ
+                                historyAdapter.removeItem(position);
+
+                                Log.d("DATABASE_TEST",
+                                        "Deleted activity ID: " + item.getId());
+
+                            } else {
+
+                                // ถ้าลบไม่สำเร็จ ให้คืนรายการกลับมาแสดง
+                                historyAdapter.notifyItemChanged(position);
+
+                                Log.e("DATABASE_TEST",
+                                        "Failed to delete activity ID: " + item.getId());
+                            }
                         }
                     }
 
@@ -425,7 +490,7 @@ public class MainActivity extends AppCompatActivity
 
         String durationText =
                 String.format(
-                        Locale.getDefault(),
+                        Locale.US,
                         "%.2f",
                         durationMinutes
                 );
@@ -445,10 +510,19 @@ public class MainActivity extends AppCompatActivity
                 totalShakes > 0
         );
 
-        // เพิ่มรายการใหม่ไว้ด้านบน
-        historyList.add(0, item);
+        // บันทึกข้อมูลลง SQLite
+        long insertedId = databaseHelper.insertActivity(item);
 
-        historyAdapter.notifyItemInserted(0);
+        if (insertedId == -1) {
+            Log.e("DATABASE_TEST", "Failed to insert activity");
+            return;
+        }
+
+        Log.d("DATABASE_TEST",
+                "Activity inserted successfully. ID: " + insertedId);
+
+    // โหลดข้อมูลใหม่จาก SQLite
+        loadHistory();
 
         rvHistory.scrollToPosition(0);
 

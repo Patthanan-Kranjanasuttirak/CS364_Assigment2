@@ -3,7 +3,7 @@ plugins {
 }
 
 android {
-    namespace 'com.example.cs364_assigment2'
+    namespace 'com.example.database'
     compileSdk {
         version = release(37)
     }

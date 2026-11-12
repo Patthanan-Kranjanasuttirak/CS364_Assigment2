@@ -1,4 +1,4 @@
-package com.example.cs364_assigment2;
+package com.example.database;
 
 import android.content.Context;
 import android.hardware.Sensor;

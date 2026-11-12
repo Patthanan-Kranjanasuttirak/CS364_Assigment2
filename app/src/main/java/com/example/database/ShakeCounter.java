@@ -1,4 +1,4 @@
-package com.example.cs364_assigment2;
+package com.example.database;
 
 /**
  * Pure-Java shake detection algorithm (no Android dependency, so it can be unit-tested).
