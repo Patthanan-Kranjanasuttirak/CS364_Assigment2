@@ -48,4 +48,16 @@ public class ShakeCounterTest {
         assertEquals(12f, ShakeCounter.shakesPerMinute(6, 30000), 0.001f);
         assertEquals(0f, ShakeCounter.shakesPerMinute(5, 0), 0.001f);
     }
+    @Test
+    public void resetClearsShakeCount() {
+        ShakeCounter counter = new ShakeCounter();
+
+        simulateShakes(counter, 3, 600, new long[]{1000});
+
+        assertEquals(3, counter.getShakeCount());
+
+        counter.reset();
+
+        assertEquals(0, counter.getShakeCount());
+    }
 }

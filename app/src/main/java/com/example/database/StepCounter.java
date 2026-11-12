@@ -7,7 +7,7 @@ public class StepCounter {
     private float previousMagnitude = 0;
     private float previousPreviousMagnitude = 0;
 
-    private long lastStepTime = 0;
+    private long lastStepTime = -MIN_STEP_INTERVAL;
 
     // ค่าที่ใช้เริ่มต้นสำหรับตรวจจับก้าว
     private static final float THRESHOLD = 1.2f;
@@ -59,6 +59,6 @@ public class StepCounter {
         steps = 0;
         previousMagnitude = 0;
         previousPreviousMagnitude = 0;
-        lastStepTime = 0;
+        lastStepTime = -MIN_STEP_INTERVAL;
     }
 }

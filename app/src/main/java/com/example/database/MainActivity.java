@@ -38,6 +38,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
 import com.example.database.database.DatabaseHelper;
+import android.util.Log;
 
 public class MainActivity extends AppCompatActivity
 
@@ -57,6 +58,11 @@ public class MainActivity extends AppCompatActivity
     private ShakeDetector shakeDetector;
     private TextView liveShake;
     private TextView summaryShakeValue;
+    private TextView accumWalkValue;
+    private TextView accumShakeValue;
+
+    private TextView recordStepsValue;
+    private TextView recordShakesValue;
 
     // ===== Activity History =====
     private RecyclerView rvHistory;
@@ -68,11 +74,14 @@ public class MainActivity extends AppCompatActivity
     private long sessionStartTime;
     private Button btnSaveActivity;
     private void loadHistory() {
+
         historyList.clear();
 
         historyList.addAll(databaseHelper.getAllActivities());
 
         historyAdapter.notifyDataSetChanged();
+
+        updateActivitySummary();
 
         Log.d("DATABASE_TEST",
                 "Loaded activities: " + historyList.size());
@@ -130,10 +139,14 @@ public class MainActivity extends AppCompatActivity
 
         liveShake = findViewById(R.id.liveShake);
         summaryShakeValue = findViewById(R.id.summaryShakeValue);
-
+        accumWalkValue = findViewById(R.id.accumWalkValue);
+        accumShakeValue = findViewById(R.id.accumShakeValue);
+        recordStepsValue = findViewById(R.id.recordStepsValue);
+        recordShakesValue = findViewById(R.id.recordShakesValue);
         shakeDetector = new ShakeDetector(this);
 
         shakeDetector.setOnShakeListener(total -> {
+            Log.d("SHAKE_TEST", "UI received shake: " + total);
             updateShakeUI(total);
         });
 
@@ -221,6 +234,8 @@ public class MainActivity extends AppCompatActivity
             float x = event.values[0];
             float y = event.values[1];
             float z = event.values[2];
+            Log.d("SENSOR_TEST",
+                    "X=" + x + ", Y=" + y + ", Z=" + z);
 
             // timestamp
             long timestamp = event.timestamp / 1_000_000L;
@@ -341,15 +356,13 @@ public class MainActivity extends AppCompatActivity
 
                             if (deletedRows > 0) {
 
-                                // ลบออกจากหน้าจอเมื่อฐานข้อมูลลบสำเร็จ
-                                historyAdapter.removeItem(position);
+                                loadHistory();
 
                                 Log.d("DATABASE_TEST",
                                         "Deleted activity ID: " + item.getId());
 
                             } else {
 
-                                // ถ้าลบไม่สำเร็จ ให้คืนรายการกลับมาแสดง
                                 historyAdapter.notifyItemChanged(position);
 
                                 Log.e("DATABASE_TEST",
@@ -439,6 +452,54 @@ public class MainActivity extends AppCompatActivity
         itemTouchHelper.attachToRecyclerView(rvHistory);
     }
 
+    private void updateActivitySummary() {
+
+        int totalSteps = 0;
+        int totalShakes = 0;
+
+        int recordSteps = 0;
+        int recordShakes = 0;
+
+        for (HistoryItem item : historyList) {
+
+            totalSteps += item.getTotalSteps();
+            totalShakes += item.getTotalShakes();
+
+            recordSteps = Math.max(
+                    recordSteps,
+                    item.getTotalSteps()
+            );
+
+            recordShakes = Math.max(
+                    recordShakes,
+                    item.getTotalShakes()
+            );
+        }
+
+        if (accumWalkValue != null) {
+            accumWalkValue.setText(String.valueOf(totalSteps));
+        }
+
+        if (accumShakeValue != null) {
+            accumShakeValue.setText(String.valueOf(totalShakes));
+        }
+
+        // Update Personal Records
+        if (recordStepsValue != null) {
+            recordStepsValue.setText(String.valueOf(recordSteps));
+        }
+
+        if (recordShakesValue != null) {
+            recordShakesValue.setText(String.valueOf(recordShakes));
+        }
+
+        Log.d("ACTIVITY_SUMMARY",
+                "Total Steps: " + totalSteps
+                        + ", Total Shakes: " + totalShakes
+                        + ", Record Steps: " + recordSteps
+                        + ", Record Shakes: " + recordShakes);
+    }
+
     private void saveActivity() {
 
         // ==========================
@@ -455,6 +516,10 @@ public class MainActivity extends AppCompatActivity
             durationMinutes = 0.01f;
         }
 
+        if (summaryStepValue != null) {
+            summaryStepValue.setText("0");
+        }
+
         // ==========================
         // ข้อมูล Steps
         // ==========================
@@ -464,6 +529,8 @@ public class MainActivity extends AppCompatActivity
         float stepRate =
                 totalSteps / durationMinutes;
 
+
+
         // ==========================
         // ข้อมูล Shake
         // ==========================
@@ -472,7 +539,7 @@ public class MainActivity extends AppCompatActivity
                 getSessionShakes();
 
         float shakeRate =
-                getSessionShakesPerMinute();
+                totalShakes / durationMinutes;
 
         // ==========================
         // วันที่ / เวลา
@@ -578,10 +645,19 @@ public class MainActivity extends AppCompatActivity
     public float getSessionShakesPerMinute() {
 
         if (shakeDetector == null) {
-            return 0;
+            return 0f;
         }
 
-        return shakeDetector.getShakesPerMinute();
+        long elapsedMillis =
+                SystemClock.elapsedRealtime() - sessionStartTime;
+
+        if (elapsedMillis <= 0) {
+            return 0f;
+        }
+
+        float durationMinutes = elapsedMillis / 60000f;
+
+        return getSessionShakes() / durationMinutes;
     }
 
 
